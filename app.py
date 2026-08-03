@@ -17,6 +17,7 @@ niedrig = 1
 hoch = 95
 bestes = None
 
+
 while niedrig <= hoch:
     mitte = (niedrig + hoch) // 2
 
