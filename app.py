@@ -2,35 +2,49 @@ from PIL import Image
 from io import BytesIO
 
 
-img = Image.open("test.jpg")     
-print("Modus:", img.mode)        
-
-if img.mode in ("RGBA", "P", "LA"):   
-    img = img.convert("RGB")          
-
-
-
-
-
 ziel = 800 * 1024
-niedrig = 1
-hoch = 95
-bestes = None
+niedrig_quali = 1
+hohe_quali = 95
 
 
-while niedrig <= hoch:
-    mitte = (niedrig + hoch) // 2
+def compress_to_target(ziel, niedrig_quali, hohe_quali):
+    
+    img = Image.open("test.jpg")   
+    
+    if img.mode in ("RGBA", "P", "LA"):   
+        img = img.convert("RGB")  
+    
+    runden = 0
+    beste_quali = None
+    beste_groesse = None
+    while niedrig_quali <= hohe_quali:
+        mitte = (niedrig_quali + hohe_quali) // 2
 
-    buffer = BytesIO()
-    img.save(buffer, format="JPEG", quality=mitte)
-    groesse = buffer.tell()
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG", quality=mitte)
+        groesse = buffer.tell()
 
-    print(f"probiere {mitte} → {groesse} Bytes")
+        if groesse <= ziel:
+            beste_quali = mitte
+            beste_groesse = groesse
+            bester_buffer = buffer
+            with open("ergebnis.jpg", "wb") as f:
+                f.write(bester_buffer.getvalue())
+            niedrig_quali = mitte + 1
+            runden += 1
+        else:
+            hohe_quali = mitte - 1
+            runden += 1
+    print(f"beste Qualität: {beste_quali}, Größe: {beste_groesse} Bytes, Runden: {runden}")
 
-    if groesse <= ziel:
-        bestes = mitte
-        niedrig = mitte + 1
-    else:
-        hoch = mitte - 1
+compress_to_target(ziel, niedrig_quali, hohe_quali)
 
-print("beste Qualität:", bestes)
+    
+    
+    
+
+
+
+
+
+
