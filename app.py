@@ -54,7 +54,7 @@ def compress_to_target(img, ziel):
         breite, hoehe = img.size
         while breite >= 600:
             
-            img = img.resize((int(breite * 0.9), int(hoehe * 0.9)))
+            img = img.resize((int(breite * 0.7), int(hoehe * 0.7)))
             breite, hoehe = img.size
             erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
 
