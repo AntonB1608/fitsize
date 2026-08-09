@@ -2,7 +2,7 @@ from PIL import Image
 from io import BytesIO
 
 
-ziel = 50 * 1024
+ziel = 300 * 1024
 img = Image.open("original.jpg")   
 def find_quali(img, ziel):
     niedrig_quali = 30
@@ -34,24 +34,40 @@ def find_quali(img, ziel):
             niedrig_quali = mitte + 1
             
         else:
+
             hohe_quali = mitte - 1
-           
     
-    if not beste_quali is None:
+    if beste_quali is not None:
 
-        erfolg_quali = True
-        return erfolg_quali, beste_quali, beste_groesse, bester_buffer
-    else:
-        erfolg_quali = False
-        return erfolg_quali, beste_quali, beste_groesse, bester_buffer
+        erfolg = True
+        return erfolg, beste_quali, beste_groesse, bester_buffer
+    erfolg = False 
+    return erfolg, beste_quali, beste_groesse, bester_buffer
+def compress_to_target(img, ziel):
+    erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
+
+    if erfolg:
+        return erfolg, beste_quali, beste_groesse, bester_buffer
+        
+    if erfolg == False:
+        
+        breite, hoehe = img.size
+        while breite >= 600:
+            
+            img = img.resize((int(breite * 0.9), int(hoehe * 0.9)))
+            breite, hoehe = img.size
+            erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
 
 
+            if erfolg:
+                return erfolg, beste_quali, beste_groesse, bester_buffer
+        erfolg = False
+        return erfolg, beste_quali, beste_groesse, bester_buffer
+
+print(compress_to_target(img, ziel))
 
 
-
-erfolg_quali, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
-if erfolg_quali:
-    print(f"Qualität {beste_quali}, {beste_groesse} Bytes")
+    
     
     
     
