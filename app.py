@@ -1,9 +1,22 @@
 from PIL import Image
 from io import BytesIO
+from flask import Flask, render_template, send_file, request
 
+app = Flask(__name__)
 
-ziel = 300 * 1024
-img = Image.open("original.jpg")   
+@app.route("/compress", methods=["POST", "GET"])
+def compress():
+    datei = request.files["bild"]          
+    img = Image.open(datei) 
+    ziel = 300 * 1024
+    erfolg, beste_quali, beste_groesse, bester_buffer = compress_to_target(img, ziel)
+    if erfolg:
+        bester_buffer.seek(0)
+        return send_file(bester_buffer, mimetype="image/jpeg",
+                         as_attachment=True, download_name="fitsize.jpg")
+    else:
+        return "Die Datei konnte nicht auf die gewünschte Größe komprimiert werden."
+   
 def find_quali(img, ziel):
     niedrig_quali = 30
     hohe_quali = 95
@@ -43,6 +56,7 @@ def find_quali(img, ziel):
         return erfolg, beste_quali, beste_groesse, bester_buffer
     erfolg = False 
     return erfolg, beste_quali, beste_groesse, bester_buffer
+
 def compress_to_target(img, ziel):
     erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
 
@@ -64,8 +78,8 @@ def compress_to_target(img, ziel):
         erfolg = False
         return erfolg, beste_quali, beste_groesse, bester_buffer
 
-print(compress_to_target(img, ziel))
-
+if __name__ == "__main__":
+    app.run(port=5555, debug=True)
 
     
     
