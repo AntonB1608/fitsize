@@ -1,15 +1,30 @@
 from PIL import Image
 from io import BytesIO
-from flask import Flask, render_template, send_file, request
+from flask import Flask, render_template, send_file, request, flash, redirect
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv("secret_key")
 
-@app.route("/compress", methods=["POST", "GET"])
+
+@app.route("/", methods=["POST", "GET"])
 def compress():
-    datei = request.files["bild"]          
+    if request.method == "GET":
+        return render_template("index.html")
+    try: 
+        datei = request.files["bild"]  
+    except:
+        flash("Bitte lade eine Bilddatei hoch.", "error")
+        return render_template("index.html")
+    try:
+        ziel = int(request.form.get("zielgroesse")) * 1024
+    except (TypeError, ValueError):
+        flash("Bitte gib eine Zahl als Zielgröße ein.", "error")
+        return render_template("index.html") 
     img = Image.open(datei) 
-    ziel = 300 * 1024
-    erfolg, beste_quali, beste_groesse, bester_buffer = compress_to_target(img, ziel)
+    erfolg, beste_groesse, bester_buffer = compress_to_target(img, ziel)
     if erfolg:
         bester_buffer.seek(0)
         return send_file(bester_buffer, mimetype="image/jpeg",
@@ -29,7 +44,6 @@ def find_quali(img, ziel):
     beste_quali = None
     beste_groesse = None
     bester_buffer = None
-    kleiner = None
     while niedrig_quali <= hohe_quali:
 
         mitte = (niedrig_quali + hohe_quali) // 2
@@ -53,15 +67,15 @@ def find_quali(img, ziel):
     if beste_quali is not None:
 
         erfolg = True
-        return erfolg, beste_quali, beste_groesse, bester_buffer
+        return erfolg, beste_groesse, bester_buffer
     erfolg = False 
-    return erfolg, beste_quali, beste_groesse, bester_buffer
+    return erfolg, beste_groesse, bester_buffer
 
 def compress_to_target(img, ziel):
-    erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
+    erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
 
     if erfolg:
-        return erfolg, beste_quali, beste_groesse, bester_buffer
+        return erfolg, beste_groesse, bester_buffer
         
     if erfolg == False:
         
@@ -70,13 +84,13 @@ def compress_to_target(img, ziel):
             
             img = img.resize((int(breite * 0.7), int(hoehe * 0.7)))
             breite, hoehe = img.size
-            erfolg, beste_quali, beste_groesse, bester_buffer = find_quali(img, ziel)
+            erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
 
 
             if erfolg:
-                return erfolg, beste_quali, beste_groesse, bester_buffer
+                return erfolg, beste_groesse, bester_buffer
         erfolg = False
-        return erfolg, beste_quali, beste_groesse, bester_buffer
+        return erfolg, beste_groesse, bester_buffer
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

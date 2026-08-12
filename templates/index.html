@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fitsize — Bilder auf die exakte Größe komprimieren</title>
+</head>
+<body>
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <h1>Bildkompressor</h1>  
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <label for="bild">Bilddatei hochladen:</label>
+        <input type="file" name="bild" id="bild" accept="image/*" required>
+        <label for="zielgroesse">Zielgröße (in KB):</label>
+        <input type="number" name="zielgroesse" id="zielgroesse" min="1" required>
+        <button type="submit">Bild komprimieren</button>
+    </form>
+  </div>
+</body>
+
+</html>
