@@ -13,25 +13,41 @@ app.config['SECRET_KEY'] = os.getenv("secret_key")
 def compress():
     if request.method == "GET":
         return render_template("index.html")
-    try: 
-        datei = request.files["bild"]  
-    except:
-        flash("Bitte lade eine Bilddatei hoch.", "error")
+    datei = request.files.get("bild")
+    if not datei or datei.filename == "":
+        flash("Bitte lade eine Bilddatei hoch.", "fehler")
         return render_template("index.html")
     try:
         ziel = int(request.form.get("zielgroesse")) * 1024
     except (TypeError, ValueError):
-        flash("Bitte gib eine Zahl als Zielgröße ein.", "error")
+        flash("Bitte gib eine Zahl als Zielgröße ein.", "fehler")
         return render_template("index.html") 
-    img = Image.open(datei) 
+    try:
+        img = Image.open(datei)
+    except Exception:
+        flash("Diese Datei konnte nicht als Bild gelesen werden.", "fehler")
+        return render_template("index.html") 
+    datei.seek(0, 2)     
+    datei_groesse = datei.tell()  
+    datei.seek(0)   
+    if datei_groesse <= ziel:
+        buffer = BytesIO()
+        img.save(buffer)
+        flash("Die Datei ist bereits kleiner als die gewünschte Größe.", "erfolg")
+        return render_template("index.html"), send_file(buffer, mimetype="image/jpeg",
+                         as_attachment=True, download_name="fitsize.jpg")
+    
     erfolg, beste_groesse, bester_buffer = compress_to_target(img, ziel)
+
     if erfolg:
         bester_buffer.seek(0)
-        return send_file(bester_buffer, mimetype="image/jpeg",
+        flash(f"Die Datei wurde erfolgreich auf {beste_groesse / 1024} KB komprimiert.", "erfolg")
+        return render_template("index.html"), send_file(bester_buffer, mimetype="image/jpeg",
                          as_attachment=True, download_name="fitsize.jpg")
     else:
-        return "Die Datei konnte nicht auf die gewünschte Größe komprimiert werden."
-   
+        flash("Die Datei konnte nicht auf die gewünschte Größe komprimiert werden.", "fehler")
+        return render_template("index.html")
+
 def find_quali(img, ziel):
     niedrig_quali = 30
     hohe_quali = 95
