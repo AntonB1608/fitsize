@@ -24,6 +24,7 @@ def compress():
         return render_template("index.html") 
     try:
         img = Image.open(datei)
+        img.load()
     except Exception:
         flash("Diese Datei konnte nicht als Bild gelesen werden.", "fehler")
         return render_template("index.html") 
@@ -31,19 +32,16 @@ def compress():
     datei_groesse = datei.tell()  
     datei.seek(0)   
     if datei_groesse <= ziel:
-        buffer = BytesIO()
-        img.save(buffer)
-        flash("Die Datei ist bereits kleiner als die gewünschte Größe.", "erfolg")
-        return render_template("index.html"), send_file(buffer, mimetype="image/jpeg",
-                         as_attachment=True, download_name="fitsize.jpg")
+        datei.seek(0)
+        return send_file(datei, mimetype="image/jpeg",
+                     as_attachment=True, download_name="fitsize.jpg")
     
-    erfolg, beste_groesse, bester_buffer = compress_to_target(img, ziel)
+    erfolg, _ ,  bester_buffer = compress_to_target(img, ziel)
 
     if erfolg:
         bester_buffer.seek(0)
-        flash(f"Die Datei wurde erfolgreich auf {beste_groesse / 1024} KB komprimiert.", "erfolg")
-        return render_template("index.html"), send_file(bester_buffer, mimetype="image/jpeg",
-                         as_attachment=True, download_name="fitsize.jpg")
+        return send_file(bester_buffer, mimetype="image/jpeg",
+                        as_attachment=True, download_name="fitsize.jpg")
     else:
         flash("Die Datei konnte nicht auf die gewünschte Größe komprimiert werden.", "fehler")
         return render_template("index.html")
@@ -88,7 +86,7 @@ def find_quali(img, ziel):
     return erfolg, beste_groesse, bester_buffer
 
 def compress_to_target(img, ziel):
-    erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
+    erfolg, _ , bester_buffer = find_quali(img, ziel)
 
     if erfolg:
         return erfolg, beste_groesse, bester_buffer
