@@ -86,7 +86,7 @@ def find_quali(img, ziel):
     return erfolg, beste_groesse, bester_buffer
 
 def compress_to_target(img, ziel):
-    erfolg, _ , bester_buffer = find_quali(img, ziel)
+    erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
 
     if erfolg:
         return erfolg, beste_groesse, bester_buffer

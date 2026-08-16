@@ -24,6 +24,19 @@
         <button type="submit">Bild komprimieren</button>
     </form>
   </div>
+  <script>
+  document.querySelector('form').addEventListener('submit', function () {
+    var btn = this.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Wird komprimiert…';
+
+    setTimeout(function () {
+      btn.disabled = false;
+      btn.textContent = 'Bild komprimieren';
+    }, 8000);
+  });
+
+</script>
 </body>
 
 </html>
