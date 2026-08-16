@@ -3,28 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>fitsize — Bilder auf die exakte Größe komprimieren</title>
+  <title>fitsize — Bilder auf eine feste Dateigröße bringen</title>
+  <meta name="description" content="Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste JPEG-Qualität, die darunter bleibt, und gibt das Bild zurück.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
-  <div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
+  <div class="sheet">
 
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+    <header class="masthead">
+      <span class="wordmark">fitsize</span>
+      <span class="masthead-note">Bildkompression</span>
+    </header>
+
+    <section class="opening">
+      <h1>Bilder auf eine <em>feste</em> Dateigröße bringen.</h1>
+      <p class="lede">
+        Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste
+        JPEG-Qualität, die darunter bleibt, und gibt dir das Bild zurück.
+      </p>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="notices">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span class="alert-label">Fehler</span>
+              <p>{{ message }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
-    <h1>Bildkompressor</h1>  
-    <form method="POST" action="/" enctype="multipart/form-data">
-        <label for="bild">Bilddatei hochladen:</label>
-        <input type="file" name="bild" id="bild" accept="image/*" required>
-        <label for="zielgroesse">Zielgröße (in KB):</label>
-        <input type="number" name="zielgroesse" id="zielgroesse" min="1" required>
-        <button type="submit">Bild komprimieren</button>
+
+    <form method="POST" action="/" enctype="multipart/form-data" class="form">
+
+      <div class="row">
+        <div class="row-label">
+          <span class="numeral">01</span>
+          <label for="bild">Bilddatei</label>
+        </div>
+        <div class="row-field">
+          <div class="filepick">
+            <input type="file" name="bild" id="bild" accept="image/*" required>
+            <label for="bild" class="filepick-button">Datei wählen</label>
+            <span class="filepick-name" id="dateiname">Noch keine Datei gewählt</span>
+          </div>
+          <p class="hint">JPEG oder PNG, direkt vom Gerät.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="row-label">
+          <span class="numeral">02</span>
+          <label for="zielgroesse">Zielgröße</label>
+        </div>
+        <div class="row-field">
+          <div class="amount">
+            <input type="number" name="zielgroesse" id="zielgroesse"
+                   min="1" step="1" inputmode="numeric"
+                   placeholder="800" required>
+            <span class="unit">KB</span>
+          </div>
+          <p class="hint">2000 KB sind knapp 2 MB.</p>
+        </div>
+      </div>
+
+      <div class="row row-submit">
+        <div class="row-label"></div>
+        <div class="row-field">
+          <button type="submit">Bild komprimieren</button>
+          <p class="hint">Das Ergebnis lädt als <span class="file">fitsize.jpg</span> herunter.</p>
+        </div>
+      </div>
+
     </form>
+
+    <section class="row">
+      <div class="row-label">
+        <h2>Was passiert</h2>
+      </div>
+      <div class="row-field">
+        <ol class="steps">
+          <li>
+            <h3>Die Qualität wird gesucht, nicht geraten</h3>
+            <p>
+              Eine binäre Suche über die JPEG-Qualitätsstufen 30 bis 95 findet die
+              höchste Stufe, mit der die Datei unter deiner Zielgröße bleibt.
+            </p>
+          </li>
+          <li>
+            <h3>Reicht das nicht, wird verkleinert</h3>
+            <p>
+              Das Bild geht in Schritten auf 70 % seiner Kantenlänge zurück, und
+              nach jedem Schritt läuft die Qualitätssuche erneut. Bei unter 600
+              Pixel Breite endet der Versuch, und du bekommst eine Meldung statt
+              einer Datei.
+            </p>
+          </li>
+          <li>
+            <h3>Nichts wird gespeichert</h3>
+            <p>
+              Die Datei wird auf dem Server im Arbeitsspeicher verarbeitet und
+              mit der Antwort ausgeliefert. Sie landet auf keiner Festplatte und
+              in keiner Datenbank.
+            </p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="row-label">
+        <h2>Grenzen</h2>
+      </div>
+      <div class="row-field">
+        <dl class="limits">
+          <div>
+            <dt>Ausgabe</dt>
+            <dd>Immer JPEG, immer unter dem Namen fitsize.jpg.</dd>
+          </div>
+          <div>
+            <dt>Transparenz</dt>
+            <dd>PNG mit Alphakanal wird nach RGB umgewandelt. Die Transparenz geht dabei verloren.</dd>
+          </div>
+          <div>
+            <dt>Bereits klein genug</dt>
+            <dd>Liegt deine Datei schon unter der Zielgröße, kommt sie unverändert zurück.</dd>
+          </div>
+          <div>
+            <dt>Nicht unterstützt</dt>
+            <dd>HEIC, WebP und AVIF. Stapelverarbeitung ebenso wenig.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <footer class="colophon">
+      <span>fitsize</span>
+      <span>Ein Projekt von Anton Boewer</span>
+    </footer>
+
   </div>
+
   <script>
+  var bild = document.getElementById('bild');
+  var dateiname = document.getElementById('dateiname');
+  bild.addEventListener('change', function () {
+    dateiname.textContent = bild.files.length
+      ? bild.files[0].name
+      : 'Noch keine Datei gewählt';
+    dateiname.classList.toggle('is-set', bild.files.length > 0);
+  });
+
   document.querySelector('form').addEventListener('submit', function () {
     var btn = this.querySelector('button');
     btn.disabled = true;
@@ -35,8 +166,6 @@
       btn.textContent = 'Bild komprimieren';
     }, 8000);
   });
-
-</script>
+  </script>
 </body>
-
 </html>
