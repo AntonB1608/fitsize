@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv("secret_key")
+app.config['SECRET_KEY'] = os.getenv("secret_key")
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -33,8 +37,9 @@ def compress():
     datei.seek(0)   
     if datei_groesse <= ziel:
         datei.seek(0)
-        return send_file(datei, mimetype="image/jpeg",
-                     as_attachment=True, download_name="fitsize.jpg")
+        buffer = BytesIO(datei.read())
+        return send_file(buffer, mimetype="image/jpeg",
+                         as_attachment=True, download_name="fitsize.jpg"))
     
     erfolg, _ ,  bester_buffer = compress_to_target(img, ziel)
 
