@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 from flask import Flask, render_template, send_file, request, flash, redirect
 import os
@@ -11,6 +11,8 @@ app.config['SECRET_KEY'] = os.getenv("secret_key")
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -29,6 +31,7 @@ def compress():
     try:
         img = Image.open(datei)
         img.load()
+        img = ImageOps.exif_transpose(img)
     except Exception:
         flash("Diese Datei konnte nicht als Bild gelesen werden.", "fehler")
         return render_template("index.html") 
@@ -96,20 +99,19 @@ def compress_to_target(img, ziel):
     if erfolg:
         return erfolg, beste_groesse, bester_buffer
         
-    if erfolg == False:
+    
+    breite, hoehe = img.size
+    while breite >= 600:
         
+        img = img.resize((int(breite * 0.7), int(hoehe * 0.7)), Image.Resampling.LANCZOS)
         breite, hoehe = img.size
-        while breite >= 600:
-            
-            img = img.resize((int(breite * 0.7), int(hoehe * 0.7)))
-            breite, hoehe = img.size
-            erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
+        erfolg, beste_groesse, bester_buffer = find_quali(img, ziel)
 
 
-            if erfolg:
-                return erfolg, beste_groesse, bester_buffer
-        erfolg = False
-        return erfolg, beste_groesse, bester_buffer
+        if erfolg:
+            return erfolg, beste_groesse, bester_buffer
+    erfolg = False
+    return erfolg, beste_groesse, bester_buffer
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
