@@ -39,7 +39,7 @@ def compress():
         datei.seek(0)
         buffer = BytesIO(datei.read())
         return send_file(buffer, mimetype="image/jpeg",
-                         as_attachment=True, download_name="fitsize.jpg"))
+                         as_attachment=True, download_name="fitsize.jpg")
     
     erfolg, _ ,  bester_buffer = compress_to_target(img, ziel)
 
