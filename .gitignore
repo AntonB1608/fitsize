@@ -2,4 +2,9 @@
 settings.json
 .venv/
 ergebnis.jpg
+original.jpg
 .vscode/
+.claude/
+.DS_Store
+__pycache__/
+*.pyc
