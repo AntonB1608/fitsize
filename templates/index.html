@@ -1,20 +1,6 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>fitsize — Bilder auf eine feste Dateigröße bringen</title>
-  <meta name="description" content="Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste JPEG-Qualität, die darunter bleibt, und gibt das Bild zurück.">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-</head>
-<body>
-  <div class="sheet">
+{% extends "base.html" %}
 
-    <header class="masthead">
-      <span class="wordmark">fitsize</span>
-      <span class="masthead-note">Bildkompression</span>
-    </header>
-
+{% block content %}
     <section class="opening">
       <h1>Bilder auf eine <em>feste</em> Dateigröße bringen.</h1>
       <p class="lede">
@@ -138,14 +124,9 @@
         </dl>
       </div>
     </section>
+{% endblock %}
 
-    <footer class="colophon">
-      <span>fitsize</span>
-      <span>Ein Projekt von Anton Boewer</span>
-    </footer>
-
-  </div>
-
+{% block scripts %}
   <script>
   var bild = document.getElementById('bild');
   var dateiname = document.getElementById('dateiname');
@@ -167,5 +148,4 @@
     }, 8000);
   });
   </script>
-</body>
-</html>
+{% endblock %}

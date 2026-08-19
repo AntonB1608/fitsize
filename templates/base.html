@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}fitsize — Bilder auf eine feste Dateigröße bringen{% endblock %}</title>
+  <meta name="description" content="{% block description %}Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste JPEG-Qualität, die darunter bleibt, und gibt das Bild zurück.{% endblock %}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <div class="sheet">
+
+    <header class="masthead">
+      <a class="wordmark" href="/">fitsize</a>
+      <nav class="masthead-nav">
+        <a href="/"{% if request.path == '/' %} aria-current="page"{% endif %}>Komprimieren</a>
+        <a href="/impressum"{% if request.path == '/impressum' %} aria-current="page"{% endif %}>Impressum</a>
+        <a href="/datenschutz"{% if request.path == '/datenschutz' %} aria-current="page"{% endif %}>Datenschutz</a>
+      </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+
+    <footer class="colophon">
+      <span>fitsize</span>
+      <nav class="colophon-nav">
+        <a href="/impressum">Impressum</a>
+        <a href="/datenschutz">Datenschutz</a>
+      </nav>
+      <span class="colophon-note">Ein Projekt von Anton Boewer</span>
+    </footer>
+
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
