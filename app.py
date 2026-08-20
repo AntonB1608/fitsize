@@ -53,17 +53,12 @@ def compress():
     else:
         flash("Die Datei konnte nicht auf die gewünschte Größe komprimiert werden.", "fehler")
         return render_template("index.html")
-
 @app.route("/impressum")
 def impressum():
-    return render_template("impressum.html")
-
-
+    return render_template("impressum.html") 
 @app.route("/datenschutz")
 def datenschutz():
     return render_template("datenschutz.html")
-
-
 def find_quali(img, ziel):
     niedrig_quali = 30
     hohe_quali = 95
@@ -125,14 +120,3 @@ def compress_to_target(img, ziel):
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
-
-    
-    
-    
-    
-
-
-
-
-
-

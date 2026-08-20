@@ -5,29 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}fitsize — Bilder auf eine feste Dateigröße bringen{% endblock %}</title>
   <meta name="description" content="{% block description %}Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste JPEG-Qualität, die darunter bleibt, und gibt das Bild zurück.{% endblock %}">
+  <meta name="theme-color" content="#f4f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1113" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/barlow-latin-700-normal.woff2') }}">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/ibm-plex-mono-latin-500-normal.woff2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
   <div class="sheet">
 
-    <header class="masthead">
-      <a class="wordmark" href="/">fitsize</a>
-      <nav class="masthead-nav">
-        <a href="/"{% if request.path == '/' %} aria-current="page"{% endif %}>Komprimieren</a>
-        <a href="/impressum"{% if request.path == '/impressum' %} aria-current="page"{% endif %}>Impressum</a>
-        <a href="/datenschutz"{% if request.path == '/datenschutz' %} aria-current="page"{% endif %}>Datenschutz</a>
-      </nav>
+    <header>
+      <div class="masthead">
+        <a class="wordmark" href="/">fitsize</a>
+        <nav class="masthead-nav" aria-label="Hauptnavigation">
+          <a href="/"{% if request.path == '/' %} aria-current="page"{% endif %}>Komprimieren</a>
+          <a href="/impressum"{% if request.path == '/impressum' %} aria-current="page"{% endif %}>Impressum</a>
+          <a href="/datenschutz"{% if request.path == '/datenschutz' %} aria-current="page"{% endif %}>Datenschutz</a>
+        </nav>
+      </div>
+      <p class="specline">Bild <b>&rarr;</b> Ziel in KB <b>&rarr;</b> JPEG &middot; Qualitätssuche 30–95 &middot; keine Speicherung</p>
     </header>
 
     {% block content %}{% endblock %}
 
     <footer class="colophon">
-      <span>fitsize</span>
-      <nav class="colophon-nav">
+      <span>fitsize &middot; ein Werkzeug von Anton Boewer</span>
+      <nav class="colophon-nav" aria-label="Rechtliches">
         <a href="/impressum">Impressum</a>
         <a href="/datenschutz">Datenschutz</a>
       </nav>
-      <span class="colophon-note">Ein Projekt von Anton Boewer</span>
     </footer>
 
   </div>

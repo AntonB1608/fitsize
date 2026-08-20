@@ -2,10 +2,11 @@
 
 {% block content %}
     <section class="opening">
-      <h1>Bilder auf eine <em>feste</em> Dateigröße bringen.</h1>
+      <span class="eyebrow mark">Kompression mit Zielwert</span>
+      <h1>Jedes Bild unter dein Kilobyte&#8209;Limit.</h1>
       <p class="lede">
-        Du nennst eine Zielgröße in Kilobyte. fitsize sucht die höchste
-        JPEG-Qualität, die darunter bleibt, und gibt dir das Bild zurück.
+        Du nennst die Zielgröße, fitsize sucht die höchste JPEG-Qualität,
+        die darunter bleibt — und liefert die Datei sofort zurück.
       </p>
     </section>
 
@@ -13,8 +14,8 @@
       {% if messages %}
         <div class="notices">
           {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-              <span class="alert-label">Fehler</span>
+            <div class="alert alert-{{ category }}" role="alert">
+              <span class="alert-label">{{ 'Fehler' if category == 'fehler' else 'Hinweis' }}</span>
               <p>{{ message }}</p>
             </div>
           {% endfor %}
@@ -22,130 +23,293 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" action="/" enctype="multipart/form-data" class="form">
+    <form method="POST" action="/" enctype="multipart/form-data" class="tool">
 
-      <div class="row">
-        <div class="row-label">
-          <span class="numeral">01</span>
-          <label for="bild">Bilddatei</label>
-        </div>
-        <div class="row-field">
-          <div class="filepick">
-            <input type="file" name="bild" id="bild" accept="image/*" required>
-            <label for="bild" class="filepick-button">Datei wählen</label>
-            <span class="filepick-name" id="dateiname">Noch keine Datei gewählt</span>
+      <div class="tool-grid">
+
+        <div class="dz-cell">
+          <div class="dz" id="dz">
+            <input class="dz-input" type="file" name="bild" id="bild"
+                   accept="image/*" required
+                   aria-label="Bilddatei wählen" aria-describedby="dz-note">
+            <span class="corner tl" aria-hidden="true"></span>
+            <span class="corner tr" aria-hidden="true"></span>
+            <span class="corner bl" aria-hidden="true"></span>
+            <span class="corner br" aria-hidden="true"></span>
+
+            <div class="dz-idle" id="dz-idle">
+              <span class="dz-title">Bild hierher ziehen</span>
+              <span class="dz-or">oder</span>
+              <span class="dz-btn">Datei wählen</span>
+              <span class="dz-note" id="dz-note">JPEG oder PNG &middot; bis 20&nbsp;MB</span>
+            </div>
+
+            <div class="dz-picked" id="dz-picked" hidden>
+              <img class="dz-thumb" id="dz-thumb" alt="Vorschau des gewählten Bildes">
+              <span class="dz-name mono" id="dz-name"></span>
+              <span class="dz-size" id="dz-size"></span>
+              <button type="button" class="dz-clear" id="dz-clear">Anderes Bild</button>
+            </div>
           </div>
-          <p class="hint">JPEG oder PNG, direkt vom Gerät.</p>
         </div>
-      </div>
 
-      <div class="row">
-        <div class="row-label">
-          <span class="numeral">02</span>
-          <label for="zielgroesse">Zielgröße</label>
-        </div>
-        <div class="row-field">
+        <div class="io-cell">
+          <label class="fieldlabel" for="zielgroesse">Zielgröße</label>
           <div class="amount">
             <input type="number" name="zielgroesse" id="zielgroesse"
                    min="1" step="1" inputmode="numeric"
-                   placeholder="2000" required>
+                   placeholder="500" required>
             <span class="unit">KB</span>
           </div>
-          <p class="hint">2000 KB sind knapp 2 MB.</p>
+          <p class="hint">2.000&nbsp;KB &#8776; 2&nbsp;MB.</p>
+
+          <span class="chips-label" id="chips-label">Übliche Limits</span>
+          <div class="chips" role="group" aria-labelledby="chips-label">
+            <button type="button" class="chip" data-kb="100">100</button>
+            <button type="button" class="chip" data-kb="250">250</button>
+            <button type="button" class="chip" data-kb="500">500</button>
+            <button type="button" class="chip" data-kb="1000">1.000</button>
+            <button type="button" class="chip" data-kb="2000">2.000</button>
+          </div>
+
+          <p class="delta" id="delta" aria-live="polite"></p>
+
+          <button type="submit" id="submit-btn">Komprimieren &amp; herunterladen</button>
+          <p class="hint">Das Ergebnis lädt als <span class="mono">fitsize.jpg</span> herunter. Nichts wird gespeichert.</p>
         </div>
+
       </div>
 
-      <div class="row row-submit">
-        <div class="row-label"></div>
-        <div class="row-field">
-          <button type="submit">Bild komprimieren</button>
-          <p class="hint">Das Ergebnis lädt als <span class="file">fitsize.jpg</span> herunter.</p>
+      <div class="rail-strip">
+        <span class="rail-label">Qualitätssuche</span>
+        <div class="rail" id="rail">
+          <span class="rail-min" aria-hidden="true">30</span>
+          <div class="rail-track">
+            <div class="rail-window" id="rail-window"></div>
+            <div class="rail-cursor" id="rail-cursor" hidden>
+              <span class="rail-val" id="rail-val"></span>
+            </div>
+          </div>
+          <span class="rail-max" aria-hidden="true">95</span>
         </div>
       </div>
 
     </form>
 
-    <section class="row">
-      <div class="row-label">
-        <h2>Was passiert</h2>
-      </div>
-      <div class="row-field">
-        <ol class="steps">
-          <li>
-            <h3>Die Qualität wird gesucht, nicht geraten</h3>
-            <p>
-              Eine binäre Suche über die JPEG-Qualitätsstufen 30 bis 95 findet die
-              höchste Stufe, mit der die Datei unter deiner Zielgröße bleibt.
-            </p>
-          </li>
-          <li>
-            <h3>Reicht das nicht, wird verkleinert</h3>
-            <p>
-              Das Bild geht in Schritten auf 70 % seiner Kantenlänge zurück, und
-              nach jedem Schritt läuft die Qualitätssuche erneut. Bei unter 600
-              Pixel Breite endet der Versuch weil das Bild zu klein wird, und du bekommst eine Meldung statt
-              einer Datei.
-            </p>
-          </li>
-          <li>
-            <h3>Nichts wird gespeichert</h3>
-            <p>
-              Die Datei wird auf dem Server im Arbeitsspeicher verarbeitet und
-              mit der Antwort ausgeliefert. Sie landet auf keiner Festplatte und
-              in keiner Datenbank.
-            </p>
-          </li>
-        </ol>
-      </div>
+    <section class="section">
+      <h2>Was passiert</h2>
+      <ol class="steps">
+        <li>
+          <h3>Die Qualität wird gesucht, nicht geraten</h3>
+          <p>
+            Eine binäre Suche über die JPEG-Qualitätsstufen 30 bis 95 findet die
+            höchste Stufe, mit der die Datei unter deiner Zielgröße bleibt. Genau
+            diese Suche zeigt die Schiene oben, während dein Bild verarbeitet wird.
+          </p>
+        </li>
+        <li>
+          <h3>Reicht das nicht, wird verkleinert</h3>
+          <p>
+            Das Bild geht in Schritten auf 70&nbsp;% seiner Kantenlänge zurück, und
+            nach jedem Schritt läuft die Qualitätssuche erneut. Unter 600 Pixel
+            Breite endet der Versuch, und du bekommst eine Meldung statt einer Datei.
+          </p>
+        </li>
+        <li>
+          <h3>Nichts wird gespeichert</h3>
+          <p>
+            Die Datei wird auf dem Server im Arbeitsspeicher verarbeitet und mit
+            der Antwort ausgeliefert. Sie landet auf keiner Festplatte und in
+            keiner Datenbank.
+          </p>
+        </li>
+      </ol>
     </section>
 
-    <section class="row">
-      <div class="row-label">
-        <h2>Grenzen</h2>
-      </div>
-      <div class="row-field">
-        <dl class="limits">
-          <div>
-            <dt>Ausgabe</dt>
-            <dd>Immer JPEG, immer unter dem Namen fitsize.jpg.</dd>
-          </div>
-          <div>
-            <dt>Transparenz</dt>
-            <dd>PNG mit Alphakanal wird nach RGB umgewandelt. Die Transparenz geht dabei verloren.</dd>
-          </div>
-          <div>
-            <dt>Bereits klein genug</dt>
-            <dd>Liegt deine Datei schon unter der Zielgröße, kommt sie unverändert zurück.</dd>
-          </div>
-          <div>
-            <dt>Nicht unterstützt</dt>
-            <dd>HEIC, WebP und AVIF. Stapelverarbeitung ebenso wenig.</dd>
-          </div>
-        </dl>
-      </div>
+    <section class="section">
+      <h2>Grenzen</h2>
+      <dl class="limits">
+        <div>
+          <dt>Ausgabe</dt>
+          <dd>Immer JPEG, immer unter dem Namen fitsize.jpg.</dd>
+        </div>
+        <div>
+          <dt>Transparenz</dt>
+          <dd>PNG mit Alphakanal wird nach RGB umgewandelt. Die Transparenz geht dabei verloren.</dd>
+        </div>
+        <div>
+          <dt>Bereits klein genug</dt>
+          <dd>Liegt deine Datei schon unter der Zielgröße, kommt sie unverändert zurück.</dd>
+        </div>
+        <div>
+          <dt>Nicht unterstützt</dt>
+          <dd>HEIC, WebP und AVIF. Stapelverarbeitung ebenso wenig.</dd>
+        </div>
+      </dl>
     </section>
 {% endblock %}
 
 {% block scripts %}
   <script>
-  var bild = document.getElementById('bild');
-  var dateiname = document.getElementById('dateiname');
-  bild.addEventListener('change', function () {
-    dateiname.textContent = bild.files.length
-      ? bild.files[0].name
-      : 'Noch keine Datei gewählt';
-    dateiname.classList.toggle('is-set', bild.files.length > 0);
-  });
+  (function () {
+    'use strict';
 
-  document.querySelector('form').addEventListener('submit', function () {
-    var btn = this.querySelector('button');
-    btn.disabled = true;
-    btn.textContent = 'Wird komprimiert…';
+    var fmt = new Intl.NumberFormat('de-DE');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    setTimeout(function () {
-      btn.disabled = false;
-      btn.textContent = 'Bild komprimieren';
-    }, 8000);
-  });
+    var input   = document.getElementById('bild');
+    var dz      = document.getElementById('dz');
+    var idle    = document.getElementById('dz-idle');
+    var picked  = document.getElementById('dz-picked');
+    var thumb   = document.getElementById('dz-thumb');
+    var nameEl  = document.getElementById('dz-name');
+    var sizeEl  = document.getElementById('dz-size');
+    var clearBt = document.getElementById('dz-clear');
+    var target  = document.getElementById('zielgroesse');
+    var chips   = document.querySelectorAll('.chip');
+    var delta   = document.getElementById('delta');
+    var form    = document.querySelector('form.tool');
+    var btn     = document.getElementById('submit-btn');
+    var btnText = btn.textContent;
+
+    var thumbUrl = null;
+
+    function fileKB() {
+      if (!input.files || !input.files.length) return null;
+      return Math.max(1, Math.round(input.files[0].size / 1024));
+    }
+
+    function updateDelta() {
+      var kb = fileKB();
+      var ziel = parseInt(target.value, 10);
+      delta.classList.remove('is-ok');
+      if (kb && ziel > 0) {
+        if (kb <= ziel) {
+          delta.classList.add('is-ok');
+          delta.textContent = fmt.format(kb) + ' KB — schon unter dem Ziel, kommt unver\u00e4ndert zur\u00fcck.';
+        } else {
+          delta.innerHTML = fmt.format(kb) + ' KB <span class="arrow">\u2192</span> unter ' + fmt.format(ziel) + ' KB';
+        }
+      } else if (kb) {
+        delta.textContent = fmt.format(kb) + ' KB gew\u00e4hlt';
+      } else {
+        delta.textContent = '';
+      }
+    }
+
+    function showPicked() {
+      var f = input.files && input.files[0];
+      if (!f) return showIdle();
+      if (thumbUrl) URL.revokeObjectURL(thumbUrl);
+      thumbUrl = URL.createObjectURL(f);
+      thumb.src = thumbUrl;
+      nameEl.textContent = f.name;
+      sizeEl.textContent = fmt.format(Math.max(1, Math.round(f.size / 1024))) + ' KB';
+      idle.hidden = true;
+      picked.hidden = false;
+      updateDelta();
+    }
+
+    function showIdle() {
+      if (thumbUrl) { URL.revokeObjectURL(thumbUrl); thumbUrl = null; }
+      thumb.removeAttribute('src');
+      idle.hidden = false;
+      picked.hidden = true;
+      updateDelta();
+    }
+
+    input.addEventListener('change', showPicked);
+
+    clearBt.addEventListener('click', function () {
+      input.value = '';
+      showIdle();
+    });
+
+    /* Ziehen und Ablegen */
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) {
+        e.preventDefault();
+        dz.classList.add('is-drag');
+      });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) {
+        e.preventDefault();
+        dz.classList.remove('is-drag');
+      });
+    });
+    dz.addEventListener('drop', function (e) {
+      if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+      try {
+        input.files = e.dataTransfer.files;
+        showPicked();
+      } catch (err) { /* alte Browser: Auswahl per Klick bleibt */ }
+    });
+
+    /* Übliche Limits */
+    function syncChips() {
+      chips.forEach(function (c) {
+        c.classList.toggle('is-active', c.dataset.kb === target.value);
+      });
+    }
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () {
+        target.value = c.dataset.kb;
+        syncChips();
+        updateDelta();
+      });
+    });
+    target.addEventListener('input', function () { syncChips(); updateDelta(); });
+
+    /* Signatur: die Qualitätssuche auf der Schiene */
+    var rail    = document.getElementById('rail');
+    var win     = document.getElementById('rail-window');
+    var cursor  = document.getElementById('rail-cursor');
+    var railVal = document.getElementById('rail-val');
+    var timer   = null;
+
+    function pct(v) { return ((v - 30) / 65) * 100; }
+
+    function railIdle() {
+      if (timer) { clearInterval(timer); timer = null; }
+      rail.classList.remove('is-done');
+      cursor.hidden = true;
+      win.style.left = '0%';
+      win.style.width = '100%';
+    }
+
+    function railRun() {
+      if (reduceMotion) return;
+      var lo = 30, hi = 95;
+      cursor.hidden = false;
+      timer = setInterval(function () {
+        if (lo > hi) {
+          rail.classList.add('is-done');
+          clearInterval(timer);
+          timer = null;
+          return;
+        }
+        var mid = (lo + hi) >> 1;
+        win.style.left = pct(lo) + '%';
+        win.style.width = Math.max(0, pct(hi) - pct(lo)) + '%';
+        cursor.style.left = pct(mid) + '%';
+        railVal.textContent = mid;
+        if (Math.random() < 0.55) { lo = mid + 1; } else { hi = mid - 1; }
+      }, 420);
+    }
+
+    form.addEventListener('submit', function () {
+      btn.disabled = true;
+      btn.textContent = 'Suche l\u00e4uft \u2026';
+      railRun();
+      setTimeout(function () {
+        btn.disabled = false;
+        btn.textContent = btnText;
+        railIdle();
+      }, 12000);
+    });
+
+    railIdle();
+  })();
   </script>
 {% endblock %}
