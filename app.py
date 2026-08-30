@@ -56,9 +56,6 @@ def compress():
 @app.route("/impressum")
 def impressum():
     return render_template("impressum.html") 
-@app.route("/datenschutz")
-def datenschutz():
-    return render_template("datenschutz.html")
 def find_quali(img, ziel):
     niedrig_quali = 30
     hohe_quali = 95
@@ -105,7 +102,7 @@ def compress_to_target(img, ziel):
         return erfolg, beste_groesse, bester_buffer
         
     
-    breite, hoehe = img.size
+    breite, hoehe = img.sizep
     while breite >= 600:
         
         img = img.resize((int(breite * 0.7), int(hoehe * 0.7)), Image.Resampling.LANCZOS)
